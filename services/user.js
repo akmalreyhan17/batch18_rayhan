@@ -46,7 +46,7 @@ export const getLoginInfo = async (request, response, next) => {
         if(result.length > 0) {
             successResponse(response, "Success Login", result[0]);
         } else {
-            errorResponse(response, "data not found", 404);
+            errorResponse(response, "email atau password salah", 404);
         }
     } catch(error) {
         next(error);
