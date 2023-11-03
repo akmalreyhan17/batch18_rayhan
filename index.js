@@ -29,6 +29,7 @@ app.post("/users", UserService.cerateUser);
 app.put("/users/:id", UserService.updateUser);
 app.delete("/users/:id", UserService.deleteUser);
 app.post("/login", UserService.getLoginInfo);
+//rest
 
 app.listen(port, host, () => {
     console.log(`server berjalan di http://${host}:${port}`);
