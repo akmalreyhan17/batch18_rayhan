@@ -6,7 +6,7 @@ export const cerateTask = async (name, email, password) => {
     if(result.insertId > 0) {
         console.log(`data user berhasil di buat dengan id: ${result.insertId}`)
     } else {
-        console.log("daga gagal di buat");
+        console.log("data gagal di buat");
     }
 }
 
