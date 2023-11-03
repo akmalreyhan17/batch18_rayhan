@@ -20,14 +20,15 @@
 import * as UserService from './services/user.js';
 import express from 'express';
 
-const host = "localhost";
+const host = "127.0.0.1";
 const port = 8080;
 const app = express();
 app.use(express.json());
 app.get("/users", UserService.getUser);
 app.post("/users", UserService.cerateUser);
 app.put("/users/:id", UserService.updateUser);
-app.delete("users/:id", );
+app.delete("/users/:id", UserService.deleteUser);
+app.post("/login", UserService.getLoginInfo);
 
 app.listen(port, host, () => {
     console.log(`server berjalan di http://${host}:${port}`);

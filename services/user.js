@@ -1,5 +1,5 @@
-import { getData, createData, getDataById, updateData } from "../repositories/users.js";
-import { errorResponse, successResponse } from "../utils/response.js";
+import { getData, createData, getDataById, updateData, deleteDataById, getLoginData } from "../repositories/users.js";
+import { errorResponse, successResponse, successCreate, successUpdate } from "../utils/response.js";
 
 export const cerateUser = async (request, response, next) => {
     try {
@@ -10,7 +10,8 @@ export const cerateUser = async (request, response, next) => {
         const [result] = await createData(name, email, password)
 
         if(result.insertId > 0) {
-            successResponse(response, "sucess", result.insertId);
+            //successResponse(response, "sucess", result.insertId);
+            successCreate(response, "success", result.insertId, name, email, password)
         } else {
             errorResponse(response, "failed create data")
         }
@@ -26,6 +27,24 @@ export const getUser = async (request, response, next) => {
 
         if(result.length > 0) {
             successResponse(response, "success", result);
+        } else {
+            errorResponse(response, "data not found", 404);
+        }
+    } catch(error) {
+        next(error);
+    }
+    
+}
+
+export const getLoginInfo = async (request, response, next) => {
+    try{
+        let email = request.body.email;
+        let password = request.body.password;
+
+        const [result] = await getLoginData(email, password);
+
+        if(result.length > 0) {
+            successResponse(response, "Success Login", result[0]);
         } else {
             errorResponse(response, "data not found", 404);
         }
@@ -51,10 +70,27 @@ export const updateUser = async (request, response, next) => {
         let id = request.params.id;
         let name = request.body.name;
         let email = request.body.email;
+        let password = request.body.password;
 
         const [result]= await updateData(id, name, email);
         if (result.affectedRows > 0){
-            successResponse(response, "success update data", result.affectedRows);
+            //successResponse(response, "success update data", result.affectedRows);
+            successUpdate(response, "success", response.insertId, name, email, password)
+        } else {
+            errorResponse(response, "user id not found!")
+        }
+    } catch(error) {
+        next(error)
+    }
+}
+
+export const deleteUser = async (request, response, next) => {
+    try {
+        let id = request.params.id;
+
+        const [result]= await deleteDataById(id);
+        if (result.affectedRows > 0){
+            successResponse(response, "success delete data", result.affectedRows);
         } else {
             errorResponse(response, "user id not found!")
         }
