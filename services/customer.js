@@ -1,21 +1,25 @@
-import { getData, createData, getDataById, updateData, deleteDataById, getDataByEmail } from "../repositories/users.js";
+import { getData, createData, getDataById, updateData, deleteDataById, getDataByEmail } from "../repositories/customers.js";
 import { errorResponse, successResponse, successCreate, successUpdate } from "../utils/response.js";
 import jwt from "jsonwebtoken";
 import bcrypt from 'bcrypt';
+import { request, response } from "express";
 
 const SECRET_ACCESS_TOKEN = "kelas.com";
 const SECRET_REFRESH_TOKEN = "backend";
 
-export const cerateUser = async (request, response, next) => {
+export const createCustomer = async (request, response, next) => {
     try {
-        let name = request.body.name;
+        let nama = request.body.nama;
         let email = request.body.email;
         let password = request.body.password;
+        let nomor_hp = request.body.nomor_hp;
+        let alamat = request.body.alamat;
         let saltRound = 10;
 
         bcrypt.hash(password, saltRound, async (err, hashedPassword) =>{
-            const [result] = await createData(name, email, hashedPassword);
+            const [result] = await createData(nama, email, hashedPassword, nomor_hp, alamat);
             const [users] = await getDataById(result.insertId)
+            //const [users1] = await getDataByEmail(email);
 
             if(users.length > 0) {
                 //successResponse(response, "sucess", result.insertId);
@@ -32,10 +36,10 @@ export const cerateUser = async (request, response, next) => {
     
 }
 
-export const getUser = async (request, response, next) => {
+export const getCustomer = async (request, response, next) => {
     try{
+        //console.log(request.claims.email)
         const [result] = await getData();
-        console.log(request.claims.email)
 
         if(result.length > 0) {
             successResponse(response, "success", result);
@@ -48,7 +52,7 @@ export const getUser = async (request, response, next) => {
     
 }
 
-export const getLoginInfo = async (request, response, next) => {
+export const getLoginCustomer = async (request, response, next) => {
     try{
         let email = request.body.email;
         let pass = request.body.password;
@@ -60,9 +64,11 @@ export const getLoginInfo = async (request, response, next) => {
             bcrypt.compare(pass, user.password, (err, isValid) => {
                 if(isValid) {
                     let payload = {
-                        id: user.user_id,
-                        name: user.name,
-                        email: user.email
+                        id: user.customer_id,
+                        nama: user.nama,
+                        email: user.email,
+                        nomor_hp: user.nomor_hp,
+                        alamat: user.alamat
                     };
                     let accessToken = jwt.sign(payload, SECRET_ACCESS_TOKEN, {expiresIn:"15m"});
                     let refreshToken = jwt.sign(payload, SECRET_REFRESH_TOKEN, { expiresIn:"30m"});
@@ -82,7 +88,7 @@ export const getLoginInfo = async (request, response, next) => {
     
 }
 
-export const validateToken = (request, response, next) => {
+export const validateToken1 = (request, response, next) => {
     try {
         let authToken = request.headers.authorization;
         let accessToken = authToken && authToken.split(' ')[1]; // Bearer accessToken
@@ -100,28 +106,37 @@ export const validateToken = (request, response, next) => {
     }
 }
 
-export const getUserById = async(id) => {
-    const [result] = await getDataById(id);
+export const getCustomerById = async(request, response, next) => {
+    try {
+        //console.log(request.claims)
+        //console.log(request.claims.customer_id)
+        let cust_id = request.claims.id;
+        const[result] = await getDataById(cust_id);
 
-    if(result.length > 0) {
-        console.log(result[0]);
-    } else {
-        console.log(`data user tidak di temukan`)
+        if(result.length > 0){
+            successResponse(response, "profil berhasil didapat", result[0])
+        } else{
+            errorResponse(response, "profil tidak ditemukan", 403)
+        }
+    } catch(error) {
+        next(error);
     }
     
 }
 
-export const updateUser = async (request, response, next) => {
+export const updateCustomer = async (request, response, next) => {
     try {
-        let id = request.params.id;
-        let name = request.body.name;
+        let id = request.claims.id;
+        let nama = request.body.nama;
         let email = request.body.email;
-        let password = request.body.password;
+        let nomor_hp = request.body.nomor_hp;
+        let alamat = request.body.alamat;
 
-        const [result]= await updateData(id, name, email);
+        const [result]= await updateData(id, nama, email, nomor_hp, alamat);
+        const [users] = await getDataById(id)
+
         if (result.affectedRows > 0){
-            //successResponse(response, "success update data", result.affectedRows);
-            successUpdate(response, "success", response.insertId, name, email, password)
+            successResponse(response, "success", users[0])
         } else {
             errorResponse(response, "user id not found!")
         }
@@ -130,9 +145,9 @@ export const updateUser = async (request, response, next) => {
     }
 }
 
-export const deleteUser = async (request, response, next) => {
+export const deleteCustomer = async (request, response, next) => {
     try {
-        let id = request.params.id;
+        let id = request.claims.id;
 
         const [result]= await deleteDataById(id);
         if (result.affectedRows > 0){
@@ -145,6 +160,3 @@ export const deleteUser = async (request, response, next) => {
     }
 }
 
-const createToken = async (request, response, next) => {
-    jwt.sign(request)
-}
